@@ -173,12 +173,11 @@ while true do
 
     if frontHasLog() then
         chopTree()
-        dumpLogs()
         plantSaplings()
     end
 
     -- Stap 2: altijd terug naar wachtpositie (1 blok afstand)
     turtle.back()
-
+    dumpLogs()
     sleep(CHECK_INTERVAL)
 end
