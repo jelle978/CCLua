@@ -109,20 +109,23 @@ end
 function plantSaplings()
     turtle.select(SAPLING_SLOT)
 
-    -- Positie 1
+    -- Ga eerst naar achterste linker positie
+    safeForward()
+
+    -- Plant achter-links
     turtle.place()
 
-    -- Positie 2 (rechts)
+    -- Naar achter-rechts
     turtle.turnRight()
     safeForward()
     turtle.turnLeft()
     turtle.place()
 
-    -- Positie 4 (vooruit)
-    safeForward()
+    -- Terug naar voor-rechts
+    turtle.back()
     turtle.place()
 
-    -- Positie 3 (links)
+    -- Naar voor-links
     turtle.turnLeft()
     safeForward()
     turtle.turnRight()
@@ -131,6 +134,7 @@ function plantSaplings()
     -- Terug naar startpositie
     turtle.back()
 end
+
 
 -- =========================
 -- Main loop
