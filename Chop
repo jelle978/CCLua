@@ -1,0 +1,101 @@
+-- =========================
+-- Config
+-- =========================
+local FUEL_SLOT = 1
+local MIN_FUEL = 100
+
+-- =========================
+-- Refuel
+-- =========================
+function refuelIfNeeded()
+    if turtle.getFuelLevel() == "unlimited" then return end
+    if turtle.getFuelLevel() < MIN_FUEL then
+        turtle.select(FUEL_SLOT)
+        turtle.refuel(1)
+    end
+end
+
+-- =========================
+-- Veilige beweging
+-- =========================
+function safeForward()
+    while not turtle.forward() do
+        turtle.dig()
+        turtle.attack()
+        turtle.suck()
+        sleep(0.1)
+    end
+end
+
+function safeUp()
+    while not turtle.up() do
+        turtle.digUp()
+        turtle.attackUp()
+        turtle.suckUp()
+        sleep(0.1)
+    end
+end
+
+function safeDown()
+    while not turtle.down() do
+        turtle.digDown()
+        turtle.attackDown()
+        turtle.suckDown()
+        sleep(0.1)
+    end
+end
+
+-- =========================
+-- Kap 1 kolom
+-- =========================
+function chopColumn()
+    refuelIfNeeded()
+
+    local upMoves = 0
+
+    turtle.dig()
+    safeForward()
+
+    while true do
+        local ok, data = turtle.inspectUp()
+        if ok and data.name:find("log") then
+            turtle.digUp()
+            safeUp()
+            upMoves = upMoves + 1
+        else
+            break
+        end
+    end
+
+    for i = 1, upMoves do
+        safeDown()
+    end
+
+    turtle.back()
+end
+
+-- =========================
+-- 2x2 patroon
+-- =========================
+
+-- Kolom 1
+chopColumn()
+
+-- Kolom 2 (rechts)
+turtle.turnRight()
+safeForward()
+turtle.turnLeft()
+chopColumn()
+
+-- Kolom 4 (vooruit)
+safeForward()
+chopColumn()
+
+-- Kolom 3 (links)
+turtle.turnLeft()
+safeForward()
+turtle.turnRight()
+chopColumn()
+
+-- Terug naar startpositie
+turtle.back()
