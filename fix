@@ -1,0 +1,184 @@
+-- =========================
+-- Config
+-- =========================
+local FUEL_SLOT = 1
+local SAPLING_SLOT = 16
+local MIN_FUEL = 100
+local CHECK_INTERVAL = 120
+
+-- =========================
+-- Refuel
+-- =========================
+function refuelIfNeeded()
+    if turtle.getFuelLevel() == "unlimited" then return end
+    if turtle.getFuelLevel() < MIN_FUEL then
+        turtle.select(FUEL_SLOT)
+        turtle.refuel(1)
+    end
+end
+
+-- =========================
+-- Veilige beweging
+-- =========================
+function safeForward()
+    while not turtle.forward() do
+        turtle.dig()
+        turtle.attack()
+        turtle.suck()
+        sleep(0.1)
+    end
+end
+
+function safeUp()
+    while not turtle.up() do
+        turtle.digUp()
+        turtle.attackUp()
+        turtle.suckUp()
+        sleep(0.1)
+    end
+end
+
+function safeDown()
+    while not turtle.down() do
+        turtle.digDown()
+        turtle.attackDown()
+        turtle.suckDown()
+        sleep(0.1)
+    end
+end
+
+-- =========================
+-- Check of er hout staat
+-- Compatibel met oude en nieuwe CC
+-- =========================
+function frontHasLog()
+    if turtle.inspect then
+        local ok, data = turtle.inspect()
+        return ok and data.name and data.name:find("log")
+    elseif turtle.detect then
+        return turtle.detect()
+    else
+        return false
+    end
+end
+
+-- =========================
+-- Kap één kolom
+-- =========================
+function chopColumn()
+    refuelIfNeeded()
+
+    local upMoves = 0
+
+    turtle.dig()
+    safeForward()
+
+    while true do
+        local ok, data = turtle.inspectUp()
+        if ok and data.name and data.name:find("log") then
+            turtle.digUp()
+            safeUp()
+            upMoves = upMoves + 1
+        else
+            break
+        end
+    end
+
+    for i = 1, upMoves do
+        safeDown()
+    end
+
+    turtle.back()
+end
+
+-- =========================
+-- Kap volledige 2x2 boom
+-- =========================
+function chopTree()
+    chopColumn()
+
+    turtle.turnRight()
+    safeForward()
+    turtle.turnLeft()
+    chopColumn()
+
+    safeForward()
+    chopColumn()
+
+    turtle.turnLeft()
+    safeForward()
+    turtle.turnRight()
+    chopColumn()
+
+    turtle.back()
+end
+
+-- =========================
+-- Dump logs in kist achter turtle
+-- =========================
+function dumpLogs()
+    turtle.turnLeft()
+    turtle.turnLeft()
+
+    for slot = 1, 16 do
+        if slot ~= FUEL_SLOT and slot ~= SAPLING_SLOT then
+            turtle.select(slot)
+            turtle.drop()
+        end
+    end
+
+    turtle.turnLeft()
+    turtle.turnLeft()
+    turtle.select(SAPLING_SLOT)
+end
+
+-- =========================
+-- Plant saplings veilig
+-- =========================
+function plantSaplings()
+    turtle.select(SAPLING_SLOT)
+
+    -- Achter-links
+    safeForward()
+    turtle.place()
+
+    -- Achter-rechts
+    turtle.turnRight()
+    safeForward()
+    turtle.turnLeft()
+    turtle.place()
+
+    -- Voor-rechts
+    turtle.back()
+    turtle.place()
+
+    -- Voor-links
+    turtle.turnLeft()
+    safeForward()
+    turtle.turnRight()
+    turtle.place()
+
+    -- Terug naar positie tegen sapling
+    turtle.back()
+end
+
+-- =========================
+-- Main loop (groeivriendelijk)
+-- =========================
+while true do
+    refuelIfNeeded()
+
+    -- Stap 1: naar voren om te checken
+    safeForward()
+
+    if frontHasLog() then
+        chopTree()
+        dumpLogs()
+        plantSaplings()
+    end
+
+    -- Stap 2: altijd terug naar wachtpositie (1 blok afstand)
+    turtle.back()
+
+    sleep(CHECK_INTERVAL)
+end
